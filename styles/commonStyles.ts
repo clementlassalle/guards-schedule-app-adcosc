@@ -1,6 +1,107 @@
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
+  primary: '#1a365d', // ERO Security dark blue
+  secondary: '#2d3748', // Dark gray
+  accent: '#3182ce', // Light blue
+  success: '#38a169', // Green for check-ins
+  warning: '#d69e2e', // Yellow for warnings
+  danger: '#e53e3e', // Red for alerts
+  text: '#2d3748',
+  textLight: '#718096',
+  background: '#ffffff',
+  backgroundLight: '#f7fafc',
+  border: '#e2e8f0',
+  white: '#ffffff',
+};
+
+export const commonStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.white,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: colors.white,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  textLight: {
+    fontSize: 14,
+    color: colors.textLight,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  spaceBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});
+
+export const colors = {
   primary: '#162456',    // Material Blue
   secondary: '#193cb8',  // Darker Blue
   accent: '#64B5F6',     // Light Blue
