@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Stack, router } from "expo-router";
-import { View, Text, ScrollView, Pressable, Image, Alert, TextInput, Modal } from "react-native";
+import { View, Text, ScrollView, Pressable, Image, Alert, TextInput, Modal, ImageBackground } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
@@ -184,9 +184,17 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View style={commonStyles.centerContent}>
-        <Text style={commonStyles.text}>Loading...</Text>
-      </View>
+      <ImageBackground 
+        source={require('@/assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png')} 
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.loadingOverlay}>
+          <View style={commonStyles.centerContent}>
+            <Text style={[commonStyles.text, { color: colors.white }]}>Loading...</Text>
+          </View>
+        </View>
+      </ImageBackground>
     );
   }
 
@@ -200,67 +208,77 @@ export default function HomeScreen() {
             headerTintColor: colors.white,
           }}
         />
-        <ScrollView style={commonStyles.container}>
-          {/* Company Header */}
-          <View style={styles.heroSection}>
-            <View style={styles.logoContainer}>
-              <IconSymbol name="shield.checkered" size={60} color={colors.white} />
+        <ImageBackground 
+          source={require('@/assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png')} 
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        >
+          <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+            {/* Company Header */}
+            <View style={styles.heroSection}>
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={require('@/assets/images/d7d222f6-ee66-421b-911e-767afa9b930e.png')} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.companyName}>ERO Security</Text>
+              <Text style={styles.companySubtitle}>Executive Response International</Text>
+              <Text style={styles.tagline}>Professional Security Services</Text>
             </View>
-            <Text style={styles.companyName}>ERO Security</Text>
-            <Text style={styles.companySubtitle}>Executive Response International</Text>
-            <Text style={styles.tagline}>Professional Security Services</Text>
-          </View>
 
-          {/* Login Options */}
-          <View style={styles.loginSection}>
-            <Text style={styles.sectionTitle}>Access Portal</Text>
-            
-            <View style={commonStyles.card}>
-              <View style={styles.loginOption}>
-                <IconSymbol name="person.badge.key" size={32} color={colors.primary} />
-                <View style={styles.loginContent}>
-                  <Text style={styles.loginTitle}>Administrator</Text>
-                  <Text style={styles.loginDescription}>Manage shifts, employees, and schedules</Text>
+            {/* Login Options */}
+            <View style={styles.loginSection}>
+              <Text style={styles.sectionTitle}>Access Portal</Text>
+              
+              <View style={styles.cardWithBackground}>
+                <View style={styles.loginOption}>
+                  <IconSymbol name="person.badge.key" size={32} color={colors.primary} />
+                  <View style={styles.loginContent}>
+                    <Text style={styles.loginTitle}>Administrator</Text>
+                    <Text style={styles.loginDescription}>Manage shifts, employees, and schedules</Text>
+                  </View>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onPress={() => handleLoginPress('admin')}
+                  >
+                    Login
+                  </Button>
                 </View>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onPress={() => handleLoginPress('admin')}
-                >
-                  Login
-                </Button>
+              </View>
+
+              <View style={styles.cardWithBackground}>
+                <View style={styles.loginOption}>
+                  <IconSymbol name="person.circle" size={32} color={colors.accent} />
+                  <View style={styles.loginContent}>
+                    <Text style={styles.loginTitle}>Employee</Text>
+                    <Text style={styles.loginDescription}>View schedule and check-in to shifts</Text>
+                  </View>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onPress={() => handleLoginPress('employee')}
+                  >
+                    Login
+                  </Button>
+                </View>
               </View>
             </View>
 
-            <View style={commonStyles.card}>
-              <View style={styles.loginOption}>
-                <IconSymbol name="person.circle" size={32} color={colors.accent} />
-                <View style={styles.loginContent}>
-                  <Text style={styles.loginTitle}>Employee</Text>
-                  <Text style={styles.loginDescription}>View schedule and check-in to shifts</Text>
-                </View>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onPress={() => handleLoginPress('employee')}
-                >
-                  Login
-                </Button>
+            {/* Company Info */}
+            <View style={styles.infoSection}>
+              <Text style={styles.sectionTitle}>About ERO Security</Text>
+              <View style={styles.cardWithBackground}>
+                <Text style={styles.infoText}>
+                  ERO Security provides comprehensive security solutions with highly trained professionals. 
+                  Our team ensures safety and protection across various locations and events.
+                </Text>
               </View>
             </View>
-          </View>
-
-          {/* Company Info */}
-          <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>About ERO Security</Text>
-            <View style={commonStyles.card}>
-              <Text style={commonStyles.text}>
-                ERO Security provides comprehensive security solutions with highly trained professionals. 
-                Our team ensures safety and protection across various locations and events.
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </ImageBackground>
 
         {/* Login Modal */}
         <Modal
@@ -371,108 +389,144 @@ export default function HomeScreen() {
           ),
         }}
       />
-      <ScrollView style={commonStyles.container}>
-        {/* Dashboard Header */}
-        <View style={styles.dashboardHeader}>
-          <Text style={styles.welcomeText}>Welcome back!</Text>
-          <Text style={styles.roleText}>{user.role === 'admin' ? 'Administrator' : 'Employee'}</Text>
-        </View>
+      <ImageBackground 
+        source={require('@/assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png')} 
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+          {/* Dashboard Header */}
+          <View style={styles.dashboardHeader}>
+            <Image 
+              source={require('@/assets/images/d7d222f6-ee66-421b-911e-767afa9b930e.png')} 
+              style={styles.dashboardLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.welcomeText}>Welcome back!</Text>
+            <Text style={styles.roleText}>{user.role === 'admin' ? 'Administrator' : 'Employee'}</Text>
+          </View>
 
-        {/* Quick Actions */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          
-          {user.role === 'admin' ? (
-            <>
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/admin/shifts')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="calendar.badge.plus" size={32} color={colors.primary} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Manage Shifts</Text>
-                    <Text style={styles.actionDescription}>Create and assign employee shifts</Text>
+          {/* Quick Actions */}
+          <View style={styles.actionsSection}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            
+            {user.role === 'admin' ? (
+              <>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/admin/shifts')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="calendar.badge.plus" size={32} color={colors.primary} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>Manage Shifts</Text>
+                      <Text style={styles.actionDescription}>Create and assign employee shifts</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
+                </Pressable>
 
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/admin/employees')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="person.3" size={32} color={colors.accent} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Employee Management</Text>
-                    <Text style={styles.actionDescription}>View and manage employee records</Text>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/admin/employees')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="person.3" size={32} color={colors.accent} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>Employee Management</Text>
+                      <Text style={styles.actionDescription}>View and manage employee records</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
+                </Pressable>
 
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/admin/reports')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="chart.bar" size={32} color={colors.success} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Time Reports</Text>
-                    <Text style={styles.actionDescription}>View comprehensive timetables</Text>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/admin/reports')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="chart.bar" size={32} color={colors.success} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>Time Reports</Text>
+                      <Text style={styles.actionDescription}>View comprehensive timetables</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/employee/schedule')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="calendar" size={32} color={colors.primary} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>My Schedule</Text>
-                    <Text style={styles.actionDescription}>View your assigned shifts</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/employee/schedule')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="calendar" size={32} color={colors.primary} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>My Schedule</Text>
+                      <Text style={styles.actionDescription}>View your assigned shifts</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
+                </Pressable>
 
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/employee/checkin')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="location.circle" size={32} color={colors.success} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Check In</Text>
-                    <Text style={styles.actionDescription}>Check in to your current shift</Text>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/employee/checkin')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="location.circle" size={32} color={colors.success} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>Check In</Text>
+                      <Text style={styles.actionDescription}>Check in to your current shift</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
+                </Pressable>
 
-              <Pressable style={commonStyles.card} onPress={() => navigateToFeature('/employee/history')}>
-                <View style={styles.actionItem}>
-                  <IconSymbol name="clock" size={32} color={colors.accent} />
-                  <View style={styles.actionContent}>
-                    <Text style={styles.actionTitle}>Work History</Text>
-                    <Text style={styles.actionDescription}>View your work hours and history</Text>
+                <Pressable style={styles.cardWithBackground} onPress={() => navigateToFeature('/employee/history')}>
+                  <View style={styles.actionItem}>
+                    <IconSymbol name="clock" size={32} color={colors.accent} />
+                    <View style={styles.actionContent}>
+                      <Text style={styles.actionTitle}>Work History</Text>
+                      <Text style={styles.actionDescription}>View your work hours and history</Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textLight} />
-                </View>
-              </Pressable>
-            </>
-          )}
-        </View>
-      </ScrollView>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </ImageBackground>
     </>
   );
 }
 
 const styles = {
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   heroSection: {
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingVertical: 40,
     paddingHorizontal: 20,
     alignItems: 'center' as const,
   },
   logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
+    marginBottom: 16,
+    padding: 10,
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
+  },
+  dashboardLogo: {
+    width: 80,
+    height: 80,
     marginBottom: 16,
   },
   companyName: {
@@ -480,16 +534,25 @@ const styles = {
     fontWeight: 'bold' as const,
     color: colors.white,
     marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   companySubtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   tagline: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center' as const,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   loginSection: {
     padding: 20,
@@ -497,8 +560,25 @@ const styles = {
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600' as const,
-    color: colors.text,
+    color: colors.white,
     marginBottom: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  cardWithBackground: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   loginOption: {
     flexDirection: 'row' as const,
@@ -522,20 +602,31 @@ const styles = {
     padding: 20,
     paddingTop: 0,
   },
+  infoText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+  },
   dashboardHeader: {
-    backgroundColor: colors.backgroundLight,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 20,
     alignItems: 'center' as const,
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: colors.text,
+    color: colors.white,
     marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   roleText: {
     fontSize: 16,
-    color: colors.textLight,
+    color: 'rgba(255,255,255,0.8)',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   actionsSection: {
     padding: 20,
