@@ -1,42 +1,50 @@
+
 {
   "expo": {
-    "name": "Natively",
-    "slug": "Natively",
+    "name": "ERO Security",
+    "slug": "ero-security",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/natively-dark.png",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/natively-dark.png",
+      "image": "./assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#1a1a1a"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Natively",
+      "bundleIdentifier": "com.erosecurity.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to record check-in locations for security shifts.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs location access to record check-in locations for security shifts."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/natively-dark.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png",
+        "backgroundColor": "#1a1a1a"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively"
+      "package": "com.erosecurity.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
-      "favicon": "./assets/images/final_quest_240x240.png",
+      "favicon": "./assets/images/ad8f4d37-cf1e-4dfd-b9a4-99f02abb353f.png",
       "bundler": "metro"
     },
     "plugins": [
       "expo-font",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-location"
     ],
-    "scheme": "natively",
+    "scheme": "ero-security",
     "experiments": {
       "typedRoutes": true
     },
