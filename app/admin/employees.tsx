@@ -6,7 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { Button } from '@/components/button';
 import { commonStyles, colors } from '@/styles/commonStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Employee, CheckIn } from '@/types';
+import { Employee, CheckIn, Shift } from '@/types';
 
 interface EmployeeWithStats extends Employee {
   totalHours?: number;
@@ -17,9 +17,14 @@ interface EmployeeWithStats extends Employee {
 export default function AdminEmployeesScreen() {
   const [employees, setEmployees] = useState<EmployeeWithStats[]>([]);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const [shifts, setShifts] = useState<Shift[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithStats | null>(null);
+  const [employeeToDelete, setEmployeeToDelete] = useState<EmployeeWithStats | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [newEmployee, setNewEmployee] = useState({
     name: '',
     email: '',
@@ -36,9 +41,11 @@ export default function AdminEmployeesScreen() {
     try {
       const employeesData = await AsyncStorage.getItem('employees');
       const checkInsData = await AsyncStorage.getItem('checkIns');
+      const shiftsData = await AsyncStorage.getItem('shifts');
 
       let employeesList: Employee[] = [];
       let checkInsList: CheckIn[] = [];
+      let shiftsList: Shift[] = [];
 
       if (employeesData) {
         employeesList = JSON.parse(employeesData);
@@ -49,10 +56,19 @@ export default function AdminEmployeesScreen() {
         setCheckIns(checkInsList);
       }
 
+      if (shiftsData) {
+        shiftsList = JSON.parse(shiftsData);
+        setShifts(shiftsList);
+      }
+
       // Calculate stats for each employee
       const employeesWithStats: EmployeeWithStats[] = employeesList.map(employee => {
         const employeeCheckIns = checkInsList.filter(checkIn => 
           checkIn.employeeId === employee.id
+        );
+
+        const employeeShifts = shiftsList.filter(shift => 
+          shift.employeeId === employee.id
         );
 
         const totalHours = employeeCheckIns.reduce((total, checkIn) => {
@@ -72,7 +88,7 @@ export default function AdminEmployeesScreen() {
         return {
           ...employee,
           totalHours,
-          totalShifts: employeeCheckIns.length,
+          totalShifts: employeeShifts.length,
           lastCheckIn
         };
       });
@@ -84,7 +100,11 @@ export default function AdminEmployeesScreen() {
   };
 
   const generatePin = () => {
-    return Math.floor(10000 + Math.random() * 90000).toString();
+    let pin;
+    do {
+      pin = Math.floor(10000 + Math.random() * 90000).toString();
+    } while (employees.some(emp => emp.pin === pin));
+    return pin;
   };
 
   const saveEmployees = async (updatedEmployees: Employee[]) => {
@@ -96,36 +116,82 @@ export default function AdminEmployeesScreen() {
     }
   };
 
+  const validateEmployee = (employee: any) => {
+    if (!employee.name?.trim()) {
+      Alert.alert('Error', 'Employee name is required');
+      return false;
+    }
+    if (!employee.email?.trim()) {
+      Alert.alert('Error', 'Email address is required');
+      return false;
+    }
+    if (!employee.phone?.trim()) {
+      Alert.alert('Error', 'Phone number is required');
+      return false;
+    }
+    if (!employee.position?.trim()) {
+      Alert.alert('Error', 'Position is required');
+      return false;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(employee.email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+
+    // Validate phone format (basic)
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(employee.phone.replace(/[\s\-\(\)]/g, ''))) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return false;
+    }
+
+    // Validate PIN if provided
+    if (employee.pin && (employee.pin.length !== 5 || !/^\d{5}$/.test(employee.pin))) {
+      Alert.alert('Error', 'PIN must be exactly 5 digits');
+      return false;
+    }
+
+    return true;
+  };
+
   const addEmployee = async () => {
-    if (!newEmployee.name || !newEmployee.email || !newEmployee.phone || !newEmployee.position) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!validateEmployee(newEmployee)) {
       return;
     }
 
     // Check if email already exists
-    const existingEmployee = employees.find(emp => emp.email === newEmployee.email);
+    const existingEmployee = employees.find(emp => 
+      emp.email.toLowerCase() === newEmployee.email.toLowerCase()
+    );
     if (existingEmployee) {
       Alert.alert('Error', 'An employee with this email already exists');
       return;
     }
 
+    // Check if PIN already exists (if provided)
+    if (newEmployee.pin) {
+      const existingPin = employees.find(emp => emp.pin === newEmployee.pin);
+      if (existingPin) {
+        Alert.alert('Error', 'This PIN is already in use');
+        return;
+      }
+    }
+
     const employee: Employee = {
       id: Date.now().toString(),
-      name: newEmployee.name,
-      email: newEmployee.email,
-      phone: newEmployee.phone,
-      position: newEmployee.position,
+      name: newEmployee.name.trim(),
+      email: newEmployee.email.toLowerCase().trim(),
+      phone: newEmployee.phone.trim(),
+      position: newEmployee.position.trim(),
       hireDate: new Date(),
-      isActive: true
-    };
-
-    // Add PIN to the employee data for login purposes
-    const employeeWithPin = {
-      ...employee,
+      isActive: true,
       pin: newEmployee.pin || generatePin()
     };
 
-    const updatedEmployees = [...employees.map(e => ({ ...e, pin: e.pin || generatePin() })), employeeWithPin];
+    const updatedEmployees = [...employees, employee];
     await saveEmployees(updatedEmployees);
     
     setShowAddModal(false);
@@ -137,17 +203,46 @@ export default function AdminEmployeesScreen() {
       pin: ''
     });
     
-    Alert.alert('Success', `Employee added successfully. PIN: ${employeeWithPin.pin}`);
+    Alert.alert(
+      'Success', 
+      `Employee added successfully!\n\nName: ${employee.name}\nPIN: ${employee.pin}\n\nPlease share the PIN with the employee for login.`
+    );
   };
 
   const updateEmployee = async () => {
-    if (!selectedEmployee || !selectedEmployee.name || !selectedEmployee.email || !selectedEmployee.phone || !selectedEmployee.position) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!selectedEmployee || !validateEmployee(selectedEmployee)) {
       return;
     }
 
+    // Check if email already exists (excluding current employee)
+    const existingEmployee = employees.find(emp => 
+      emp.id !== selectedEmployee.id && 
+      emp.email.toLowerCase() === selectedEmployee.email.toLowerCase()
+    );
+    if (existingEmployee) {
+      Alert.alert('Error', 'An employee with this email already exists');
+      return;
+    }
+
+    // Check if PIN already exists (excluding current employee)
+    if (selectedEmployee.pin) {
+      const existingPin = employees.find(emp => 
+        emp.id !== selectedEmployee.id && emp.pin === selectedEmployee.pin
+      );
+      if (existingPin) {
+        Alert.alert('Error', 'This PIN is already in use');
+        return;
+      }
+    }
+
     const updatedEmployees = employees.map(emp => 
-      emp.id === selectedEmployee.id ? selectedEmployee : emp
+      emp.id === selectedEmployee.id ? {
+        ...selectedEmployee,
+        name: selectedEmployee.name.trim(),
+        email: selectedEmployee.email.toLowerCase().trim(),
+        phone: selectedEmployee.phone.trim(),
+        position: selectedEmployee.position.trim(),
+      } : emp
     );
     
     await saveEmployees(updatedEmployees);
@@ -156,17 +251,55 @@ export default function AdminEmployeesScreen() {
     Alert.alert('Success', 'Employee updated successfully');
   };
 
-  const deleteEmployee = async (employeeId: string) => {
+  const confirmDeleteEmployee = (employee: EmployeeWithStats) => {
+    setEmployeeToDelete(employee);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const deleteEmployee = async () => {
+    if (!employeeToDelete) return;
+
+    try {
+      // Delete employee
+      const updatedEmployees = employees.filter(emp => emp.id !== employeeToDelete.id);
+      await saveEmployees(updatedEmployees);
+
+      // Delete associated shifts
+      const updatedShifts = shifts.filter(shift => shift.employeeId !== employeeToDelete.id);
+      await AsyncStorage.setItem('shifts', JSON.stringify(updatedShifts));
+
+      // Delete associated check-ins
+      const updatedCheckIns = checkIns.filter(checkIn => checkIn.employeeId !== employeeToDelete.id);
+      await AsyncStorage.setItem('checkIns', JSON.stringify(updatedCheckIns));
+
+      setShowDeleteConfirmModal(false);
+      setEmployeeToDelete(null);
+      
+      Alert.alert(
+        'Success', 
+        `Employee "${employeeToDelete.name}" and all associated data have been permanently deleted.`
+      );
+    } catch (error) {
+      console.log('Error deleting employee:', error);
+      Alert.alert('Error', 'Failed to delete employee. Please try again.');
+    }
+  };
+
+  const toggleEmployeeStatus = async (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return;
+
     Alert.alert(
-      'Delete Employee',
-      'Are you sure you want to delete this employee? This action cannot be undone.',
+      employee.isActive ? 'Deactivate Employee' : 'Activate Employee',
+      `Are you sure you want to ${employee.isActive ? 'deactivate' : 'activate'} ${employee.name}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: employee.isActive ? 'Deactivate' : 'Activate',
           onPress: async () => {
-            const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
+            const updatedEmployees = employees.map(emp => 
+              emp.id === employeeId ? { ...emp, isActive: !emp.isActive } : emp
+            );
             await saveEmployees(updatedEmployees);
           }
         }
@@ -174,18 +307,37 @@ export default function AdminEmployeesScreen() {
     );
   };
 
-  const toggleEmployeeStatus = async (employeeId: string) => {
-    const updatedEmployees = employees.map(emp => 
-      emp.id === employeeId ? { ...emp, isActive: !emp.isActive } : emp
-    );
-    await saveEmployees(updatedEmployees);
-  };
-
   const formatHours = (hours: number) => {
     const wholeHours = Math.floor(hours);
     const minutes = Math.round((hours - wholeHours) * 60);
     return `${wholeHours}h ${minutes}m`;
   };
+
+  const getFilteredEmployees = () => {
+    let filtered = employees;
+
+    // Filter by status
+    if (filterStatus === 'active') {
+      filtered = filtered.filter(emp => emp.isActive);
+    } else if (filterStatus === 'inactive') {
+      filtered = filtered.filter(emp => !emp.isActive);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(emp => 
+        emp.name.toLowerCase().includes(query) ||
+        emp.email.toLowerCase().includes(query) ||
+        emp.position.toLowerCase().includes(query) ||
+        emp.phone.includes(query)
+      );
+    }
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const filteredEmployees = getFilteredEmployees();
 
   return (
     <>
@@ -213,7 +365,13 @@ export default function AdminEmployeesScreen() {
           <View style={[commonStyles.card, styles.statCard]}>
             <IconSymbol name="person.3" size={24} color={colors.primary} />
             <Text style={styles.statNumber}>{employees.filter(e => e.isActive).length}</Text>
-            <Text style={styles.statLabel}>Active Employees</Text>
+            <Text style={styles.statLabel}>Active</Text>
+          </View>
+          
+          <View style={[commonStyles.card, styles.statCard]}>
+            <IconSymbol name="person.3.fill" size={24} color={colors.textLight} />
+            <Text style={styles.statNumber}>{employees.length}</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </View>
           
           <View style={[commonStyles.card, styles.statCard]}>
@@ -225,19 +383,65 @@ export default function AdminEmployeesScreen() {
           </View>
         </View>
 
+        {/* Search and Filter */}
+        <View style={commonStyles.card}>
+          <Text style={styles.sectionTitle}>Search & Filter</Text>
+          
+          <TextInput
+            style={commonStyles.input}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search by name, email, position, or phone..."
+            clearButtonMode="while-editing"
+          />
+
+          <View style={styles.filterContainer}>
+            {(['all', 'active', 'inactive'] as const).map(status => (
+              <Pressable
+                key={status}
+                style={[
+                  styles.filterButton,
+                  filterStatus === status && styles.filterButtonActive
+                ]}
+                onPress={() => setFilterStatus(status)}
+              >
+                <Text style={[
+                  styles.filterButtonText,
+                  filterStatus === status && styles.filterButtonTextActive
+                ]}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         {/* Employee List */}
         <View style={commonStyles.card}>
-          <Text style={styles.sectionTitle}>All Employees</Text>
-          {employees.length === 0 ? (
+          <View style={styles.listHeader}>
+            <Text style={styles.sectionTitle}>
+              Employees ({filteredEmployees.length})
+            </Text>
+            {employees.length === 0 && (
+              <Text style={styles.unlimitedText}>No limit on employees</Text>
+            )}
+          </View>
+
+          {filteredEmployees.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="person.badge.plus" size={48} color={colors.textLight} />
-              <Text style={styles.emptyStateText}>No employees found</Text>
+              <Text style={styles.emptyStateText}>
+                {employees.length === 0 ? 'No employees found' : 'No employees match your search'}
+              </Text>
               <Text style={styles.emptyStateSubtext}>
-                Add your first employee to get started
+                {employees.length === 0 
+                  ? 'Add your first employee to get started' 
+                  : 'Try adjusting your search or filter criteria'
+                }
               </Text>
             </View>
           ) : (
-            employees.map(employee => (
+            filteredEmployees.map(employee => (
               <View key={employee.id} style={styles.employeeItem}>
                 <View style={styles.employeeInfo}>
                   <View style={styles.employeeHeader}>
@@ -255,6 +459,9 @@ export default function AdminEmployeesScreen() {
                   <Text style={styles.employeePosition}>{employee.position}</Text>
                   <Text style={styles.employeeContact}>{employee.email}</Text>
                   <Text style={styles.employeeContact}>{employee.phone}</Text>
+                  {employee.pin && (
+                    <Text style={styles.employeePin}>PIN: {employee.pin}</Text>
+                  )}
                   
                   <View style={styles.employeeStats}>
                     <View style={styles.statItem}>
@@ -303,8 +510,8 @@ export default function AdminEmployeesScreen() {
                   </Pressable>
                   
                   <Pressable
-                    style={styles.actionButton}
-                    onPress={() => deleteEmployee(employee.id)}
+                    style={[styles.actionButton, styles.deleteActionButton]}
+                    onPress={() => confirmDeleteEmployee(employee)}
                   >
                     <IconSymbol name="trash" size={20} color={colors.danger} />
                   </Pressable>
@@ -337,6 +544,7 @@ export default function AdminEmployeesScreen() {
               value={newEmployee.name}
               onChangeText={(text) => setNewEmployee({ ...newEmployee, name: text })}
               placeholder="Enter full name"
+              autoCapitalize="words"
             />
 
             <Text style={commonStyles.label}>Email Address *</Text>
@@ -347,6 +555,7 @@ export default function AdminEmployeesScreen() {
               placeholder="Enter email address"
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
 
             <Text style={commonStyles.label}>Phone Number *</Text>
@@ -364,6 +573,7 @@ export default function AdminEmployeesScreen() {
               value={newEmployee.position}
               onChangeText={(text) => setNewEmployee({ ...newEmployee, position: text })}
               placeholder="Enter job position"
+              autoCapitalize="words"
             />
 
             <Text style={commonStyles.label}>PIN (5 digits)</Text>
@@ -376,7 +586,7 @@ export default function AdminEmployeesScreen() {
               maxLength={5}
             />
             <Text style={styles.helperText}>
-              If left empty, a PIN will be automatically generated
+              If left empty, a unique PIN will be automatically generated
             </Text>
           </ScrollView>
         </View>
@@ -405,6 +615,7 @@ export default function AdminEmployeesScreen() {
                 value={selectedEmployee.name}
                 onChangeText={(text) => setSelectedEmployee({ ...selectedEmployee, name: text })}
                 placeholder="Enter full name"
+                autoCapitalize="words"
               />
 
               <Text style={commonStyles.label}>Email Address *</Text>
@@ -415,6 +626,7 @@ export default function AdminEmployeesScreen() {
                 placeholder="Enter email address"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
               />
 
               <Text style={commonStyles.label}>Phone Number *</Text>
@@ -432,6 +644,20 @@ export default function AdminEmployeesScreen() {
                 value={selectedEmployee.position}
                 onChangeText={(text) => setSelectedEmployee({ ...selectedEmployee, position: text })}
                 placeholder="Enter job position"
+                autoCapitalize="words"
+              />
+
+              <Text style={commonStyles.label}>PIN (5 digits)</Text>
+              <TextInput
+                style={commonStyles.input}
+                value={selectedEmployee.pin || ''}
+                onChangeText={(text) => setSelectedEmployee({ 
+                  ...selectedEmployee, 
+                  pin: text.replace(/\D/g, '').slice(0, 5) 
+                })}
+                placeholder="Enter 5-digit PIN"
+                keyboardType="numeric"
+                maxLength={5}
               />
 
               <View style={styles.infoSection}>
@@ -445,6 +671,9 @@ export default function AdminEmployeesScreen() {
                 <Text style={styles.infoText}>
                   Hire Date: {selectedEmployee.hireDate ? new Date(selectedEmployee.hireDate).toLocaleDateString() : 'N/A'}
                 </Text>
+                <Text style={styles.infoText}>
+                  Status: {selectedEmployee.isActive ? 'Active' : 'Inactive'}
+                </Text>
                 {selectedEmployee.lastCheckIn && (
                   <Text style={styles.infoText}>
                     Last Check-in: {selectedEmployee.lastCheckIn.toLocaleDateString()}
@@ -453,6 +682,63 @@ export default function AdminEmployeesScreen() {
               </View>
             </ScrollView>
           )}
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteConfirmModal} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModal}>
+            <View style={styles.deleteModalHeader}>
+              <IconSymbol name="exclamationmark.triangle" size={32} color={colors.danger} />
+              <Text style={styles.deleteModalTitle}>Delete Employee</Text>
+            </View>
+            
+            {employeeToDelete && (
+              <View style={styles.deleteModalContent}>
+                <Text style={styles.deleteModalText}>
+                  Are you sure you want to permanently delete:
+                </Text>
+                <Text style={styles.deleteModalEmployee}>
+                  {employeeToDelete.name}
+                </Text>
+                <Text style={styles.deleteModalWarning}>
+                  This will also delete:
+                </Text>
+                <Text style={styles.deleteModalList}>
+                  • All shifts ({employeeToDelete.totalShifts || 0})
+                </Text>
+                <Text style={styles.deleteModalList}>
+                  • All check-in records
+                </Text>
+                <Text style={styles.deleteModalList}>
+                  • All associated data
+                </Text>
+                <Text style={styles.deleteModalFinal}>
+                  This action cannot be undone.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.deleteModalActions}>
+              <Pressable 
+                style={[styles.deleteModalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowDeleteConfirmModal(false);
+                  setEmployeeToDelete(null);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              
+              <Pressable 
+                style={[styles.deleteModalButton, styles.deleteButton]}
+                onPress={deleteEmployee}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       </Modal>
     </>
@@ -489,6 +775,41 @@ const styles = {
     color: colors.text,
     marginBottom: 16,
   },
+  listHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 16,
+  },
+  unlimitedText: {
+    fontSize: 12,
+    color: colors.success,
+    fontWeight: '600' as const,
+  },
+  filterContainer: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginTop: 12,
+  },
+  filterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  filterButtonTextActive: {
+    color: colors.white,
+    fontWeight: '600' as const,
+  },
   emptyState: {
     alignItems: 'center' as const,
     paddingVertical: 32,
@@ -524,6 +845,7 @@ const styles = {
     fontSize: 18,
     fontWeight: '600' as const,
     color: colors.text,
+    flex: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -544,6 +866,12 @@ const styles = {
     fontSize: 14,
     color: colors.textLight,
     marginBottom: 2,
+  },
+  employeePin: {
+    fontSize: 12,
+    color: colors.accent,
+    fontWeight: '600' as const,
+    marginBottom: 4,
   },
   employeeStats: {
     flexDirection: 'row' as const,
@@ -570,6 +898,9 @@ const styles = {
     borderRadius: 8,
     backgroundColor: colors.backgroundLight,
   },
+  deleteActionButton: {
+    backgroundColor: colors.backgroundLight,
+  },
   helperText: {
     fontSize: 12,
     color: colors.textLight,
@@ -592,5 +923,88 @@ const styles = {
     fontSize: 14,
     color: colors.text,
     marginBottom: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    padding: 20,
+  },
+  deleteModal: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  deleteModalHeader: {
+    alignItems: 'center' as const,
+    marginBottom: 20,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: colors.text,
+    marginTop: 8,
+  },
+  deleteModalContent: {
+    marginBottom: 24,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    color: colors.text,
+    textAlign: 'center' as const,
+    marginBottom: 8,
+  },
+  deleteModalEmployee: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: colors.text,
+    textAlign: 'center' as const,
+    marginBottom: 16,
+  },
+  deleteModalWarning: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 8,
+  },
+  deleteModalList: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 4,
+  },
+  deleteModalFinal: {
+    fontSize: 14,
+    color: colors.danger,
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
+    marginTop: 12,
+  },
+  deleteModalActions: {
+    flexDirection: 'row' as const,
+    gap: 12,
+  },
+  deleteModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+  },
+  cancelButton: {
+    backgroundColor: colors.backgroundLight,
+  },
+  deleteButton: {
+    backgroundColor: colors.danger,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600' as const,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    color: colors.white,
+    fontWeight: '600' as const,
   },
 };

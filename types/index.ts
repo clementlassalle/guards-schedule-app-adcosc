@@ -31,6 +31,7 @@ export interface Shift {
   endTime: string; // HH:MM format
   status: 'scheduled' | 'in-progress' | 'completed' | 'missed';
   notes?: string;
+  eventId?: string; // Link to calendar event
   createdAt: Date;
   updatedAt: Date;
 }
@@ -80,10 +81,15 @@ export interface TimeReport {
 export interface CalendarEvent {
   id: string;
   title: string;
-  start: Date;
-  end: Date;
-  location: string;
-  employeeName: string;
+  description?: string;
+  date: string; // YYYY-MM-DD format
+  startTime: string; // HH:MM format
+  endTime: string; // HH:MM format
+  locationId: string;
+  locationName: string;
+  type: 'event' | 'meeting' | 'training' | 'maintenance';
   color: string;
-  type: 'shift' | 'event';
+  shifts?: Shift[]; // Shifts associated with this event
+  createdAt: Date;
+  updatedAt: Date;
 }
