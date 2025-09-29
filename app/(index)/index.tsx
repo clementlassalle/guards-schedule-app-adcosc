@@ -15,7 +15,7 @@ interface User {
   pin?: string;
 }
 
-interface Employee {
+interface EmployeeData {
   id: string;
   name: string;
   pin: string;
@@ -30,7 +30,7 @@ export default function HomeScreen() {
   const [loginType, setLoginType] = useState<'admin' | 'employee'>('employee');
   const [pinInput, setPinInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<EmployeeData[]>([]);
 
   useEffect(() => {
     checkUserSession();
@@ -42,7 +42,7 @@ export default function HomeScreen() {
       const storedEmployees = await AsyncStorage.getItem('employees');
       if (!storedEmployees) {
         // Initialize with sample employees
-        const sampleEmployees: Employee[] = [
+        const sampleEmployees: EmployeeData[] = [
           {
             id: '1',
             name: 'John Smith',
@@ -82,7 +82,18 @@ export default function HomeScreen() {
         await AsyncStorage.setItem('employees', JSON.stringify(sampleEmployees));
         setEmployees(sampleEmployees);
       } else {
-        setEmployees(JSON.parse(storedEmployees));
+        const parsedEmployees = JSON.parse(storedEmployees);
+        // Ensure all employees have PINs
+        const employeesWithPins = parsedEmployees.map((emp: any) => ({
+          ...emp,
+          pin: emp.pin || Math.floor(10000 + Math.random() * 90000).toString()
+        }));
+        setEmployees(employeesWithPins);
+        
+        // Update storage if PINs were added
+        if (employeesWithPins.some((emp: any, index: number) => emp.pin !== parsedEmployees[index]?.pin)) {
+          await AsyncStorage.setItem('employees', JSON.stringify(employeesWithPins));
+        }
       }
     } catch (error) {
       console.log('Error initializing employees:', error);

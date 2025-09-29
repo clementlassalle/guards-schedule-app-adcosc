@@ -5,7 +5,8 @@ export interface User {
   role: 'admin' | 'employee';
   email: string;
   phone?: string;
-  createdAt: Date;
+  pin?: string;
+  createdAt?: Date;
 }
 
 export interface Location {
@@ -61,6 +62,7 @@ export interface Employee {
   position: string;
   hireDate: Date;
   isActive: boolean;
+  pin?: string; // 5-digit PIN for login
   totalHours?: number;
 }
 
