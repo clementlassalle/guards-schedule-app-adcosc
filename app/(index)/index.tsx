@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Stack, router } from "expo-router";
-import { View, Text, ScrollView, Pressable, Image, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, Image, Alert, TextInput, Modal } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
 import { Button } from "@/components/button";
 import { commonStyles, colors } from "@/styles/commonStyles";
@@ -12,15 +12,82 @@ interface User {
   name: string;
   role: 'admin' | 'employee';
   email: string;
+  pin?: string;
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  pin: string;
+  email: string;
+  position: string;
 }
 
 export default function HomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginType, setLoginType] = useState<'admin' | 'employee'>('employee');
+  const [pinInput, setPinInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
     checkUserSession();
+    initializeEmployees();
   }, []);
+
+  const initializeEmployees = async () => {
+    try {
+      const storedEmployees = await AsyncStorage.getItem('employees');
+      if (!storedEmployees) {
+        // Initialize with sample employees
+        const sampleEmployees: Employee[] = [
+          {
+            id: '1',
+            name: 'John Smith',
+            pin: '12345',
+            email: 'john.smith@erosecurity.com',
+            position: 'Security Guard'
+          },
+          {
+            id: '2',
+            name: 'Sarah Johnson',
+            pin: '67890',
+            email: 'sarah.johnson@erosecurity.com',
+            position: 'Security Supervisor'
+          },
+          {
+            id: '3',
+            name: 'Mike Wilson',
+            pin: '11111',
+            email: 'mike.wilson@erosecurity.com',
+            position: 'Security Guard'
+          },
+          {
+            id: '4',
+            name: 'Lisa Brown',
+            pin: '22222',
+            email: 'lisa.brown@erosecurity.com',
+            position: 'Security Guard'
+          },
+          {
+            id: '5',
+            name: 'David Lee',
+            pin: '33333',
+            email: 'david.lee@erosecurity.com',
+            position: 'Security Guard'
+          }
+        ];
+        await AsyncStorage.setItem('employees', JSON.stringify(sampleEmployees));
+        setEmployees(sampleEmployees);
+      } else {
+        setEmployees(JSON.parse(storedEmployees));
+      }
+    } catch (error) {
+      console.log('Error initializing employees:', error);
+    }
+  };
 
   const checkUserSession = async () => {
     try {
@@ -35,19 +102,69 @@ export default function HomeScreen() {
     }
   };
 
-  const handleLogin = async (role: 'admin' | 'employee') => {
-    const userData: User = {
-      id: Date.now().toString(),
-      name: role === 'admin' ? 'Admin User' : 'Employee User',
-      role,
-      email: role === 'admin' ? 'admin@erosecurity.com' : 'employee@erosecurity.com'
-    };
-    
+  const handleLoginPress = (type: 'admin' | 'employee') => {
+    setLoginType(type);
+    setShowLoginModal(true);
+    setPinInput('');
+    setPasswordInput('');
+  };
+
+  const handlePinInput = (digit: string) => {
+    if (pinInput.length < 5) {
+      setPinInput(prev => prev + digit);
+    }
+  };
+
+  const handlePinDelete = () => {
+    setPinInput(prev => prev.slice(0, -1));
+  };
+
+  const handleLogin = async () => {
     try {
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      if (loginType === 'admin') {
+        // Admin password validation
+        if (passwordInput === 'ClementLassalle') {
+          const userData: User = {
+            id: 'admin',
+            name: 'Administrator',
+            role: 'admin',
+            email: 'admin@erosecurity.com'
+          };
+          
+          await AsyncStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
+          setShowLoginModal(false);
+          setPasswordInput('');
+        } else {
+          Alert.alert('Invalid Password', 'Please enter the correct administrator password.');
+        }
+      } else {
+        // Employee PIN validation
+        if (pinInput.length === 5) {
+          const employee = employees.find(emp => emp.pin === pinInput);
+          if (employee) {
+            const userData: User = {
+              id: employee.id,
+              name: employee.name,
+              role: 'employee',
+              email: employee.email,
+              pin: employee.pin
+            };
+            
+            await AsyncStorage.setItem('user', JSON.stringify(userData));
+            setUser(userData);
+            setShowLoginModal(false);
+            setPinInput('');
+          } else {
+            Alert.alert('Invalid PIN', 'Please enter a valid 5-digit PIN.');
+            setPinInput('');
+          }
+        } else {
+          Alert.alert('Incomplete PIN', 'Please enter a complete 5-digit PIN.');
+        }
+      }
     } catch (error) {
-      console.log('Error saving user data:', error);
+      console.log('Error during login:', error);
       Alert.alert('Error', 'Failed to login. Please try again.');
     }
   };
@@ -108,7 +225,7 @@ export default function HomeScreen() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onPress={() => handleLogin('admin')}
+                  onPress={() => handleLoginPress('admin')}
                 >
                   Login
                 </Button>
@@ -125,7 +242,7 @@ export default function HomeScreen() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onPress={() => handleLogin('employee')}
+                  onPress={() => handleLoginPress('employee')}
                 >
                   Login
                 </Button>
@@ -144,6 +261,97 @@ export default function HomeScreen() {
             </View>
           </View>
         </ScrollView>
+
+        {/* Login Modal */}
+        <Modal
+          visible={showLoginModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowLoginModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {loginType === 'admin' ? 'Administrator Login' : 'Employee Login'}
+                </Text>
+                <Pressable onPress={() => setShowLoginModal(false)} style={styles.closeButton}>
+                  <IconSymbol name="xmark" size={24} color={colors.textLight} />
+                </Pressable>
+              </View>
+
+              {loginType === 'admin' ? (
+                <View style={styles.passwordSection}>
+                  <Text style={styles.inputLabel}>Administrator Password</Text>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={passwordInput}
+                    onChangeText={setPasswordInput}
+                    placeholder="Enter administrator password"
+                    secureTextEntry={true}
+                    autoCapitalize="none"
+                  />
+                  <Button
+                    variant="primary"
+                    onPress={handleLogin}
+                    disabled={passwordInput.length === 0}
+                    style={styles.loginButton}
+                  >
+                    Login as Administrator
+                  </Button>
+                </View>
+              ) : (
+                <View style={styles.pinSection}>
+                  <Text style={styles.inputLabel}>Enter Your 5-Digit PIN</Text>
+                  
+                  <View style={styles.pinDisplay}>
+                    {[0, 1, 2, 3, 4].map((index) => (
+                      <View key={index} style={styles.pinDigit}>
+                        <Text style={styles.pinDigitText}>
+                          {pinInput[index] ? '●' : ''}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.keypad}>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                      <Pressable
+                        key={digit}
+                        style={styles.keypadButton}
+                        onPress={() => handlePinInput(digit.toString())}
+                      >
+                        <Text style={styles.keypadButtonText}>{digit}</Text>
+                      </Pressable>
+                    ))}
+                    <View style={styles.keypadButton} />
+                    <Pressable
+                      style={styles.keypadButton}
+                      onPress={() => handlePinInput('0')}
+                    >
+                      <Text style={styles.keypadButtonText}>0</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.keypadButton}
+                      onPress={handlePinDelete}
+                    >
+                      <IconSymbol name="delete.left" size={24} color={colors.text} />
+                    </Pressable>
+                  </View>
+
+                  <Button
+                    variant="primary"
+                    onPress={handleLogin}
+                    disabled={pinInput.length !== 5}
+                    style={styles.loginButton}
+                  >
+                    Login as Employee
+                  </Button>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
       </>
     );
   }
@@ -352,5 +560,105 @@ const styles = {
   },
   logoutButton: {
     padding: 8,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  // Password input styles
+  passwordSection: {
+    alignItems: 'center' as const,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    color: colors.text,
+    marginBottom: 16,
+    textAlign: 'center' as const,
+  },
+  passwordInput: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: colors.white,
+    marginBottom: 24,
+  },
+  // PIN input styles
+  pinSection: {
+    alignItems: 'center' as const,
+  },
+  pinDisplay: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    marginBottom: 32,
+  },
+  pinDigit: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    backgroundColor: colors.backgroundLight,
+  },
+  pinDigitText: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: colors.text,
+  },
+  keypad: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center' as const,
+    gap: 12,
+    marginBottom: 32,
+    width: 240,
+  },
+  keypadButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.backgroundLight,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  keypadButtonText: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  loginButton: {
+    width: '100%',
   },
 };
