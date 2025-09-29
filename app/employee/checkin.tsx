@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -18,12 +18,7 @@ export default function EmployeeCheckInScreen() {
   const [notes, setNotes] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    loadUserData();
-    getCurrentLocation();
-  }, []);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
@@ -35,7 +30,12 @@ export default function EmployeeCheckInScreen() {
     } catch (error) {
       console.log('Error loading user data:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUserData();
+    getCurrentLocation();
+  }, [loadUserData]);
 
   const findCurrentShift = async (user: User) => {
     try {

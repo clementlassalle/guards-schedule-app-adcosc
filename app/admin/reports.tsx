@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -14,11 +14,7 @@ export default function AdminReportsScreen() {
   const [timeReports, setTimeReports] = useState<TimeReport[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('week');
 
-  useEffect(() => {
-    loadData();
-  }, [selectedPeriod]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const checkInsData = await AsyncStorage.getItem('checkIns');
       const employeesData = await AsyncStorage.getItem('employees');
@@ -47,7 +43,11 @@ export default function AdminReportsScreen() {
     } catch (error) {
       console.log('Error loading data:', error);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getFilteredCheckIns = (checkIns: CheckIn[]) => {
     const now = new Date();

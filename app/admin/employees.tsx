@@ -141,9 +141,9 @@ export default function AdminEmployeesScreen() {
       return false;
     }
 
-    // Validate phone format (basic)
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    if (!phoneRegex.test(employee.phone.replace(/[\s\-\(\)]/g, ''))) {
+    // Validate phone format (basic) - Fixed: removed unnecessary escape characters
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(employee.phone.replace(/[\s\-()]/g, ''))) {
       Alert.alert('Error', 'Please enter a valid phone number');
       return false;
     }
