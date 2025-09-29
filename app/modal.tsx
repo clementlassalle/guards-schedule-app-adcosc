@@ -1,3 +1,4 @@
+
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { router, Stack } from "expo-router";
@@ -28,7 +29,7 @@ export default function ModalDemo() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },

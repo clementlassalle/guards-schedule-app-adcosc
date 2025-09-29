@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Stack, router } from "expo-router";
 import { View, Text, ScrollView, Pressable, Image, Alert } from "react-native";
@@ -66,7 +67,7 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View style={[commonStyles.container, commonStyles.centerContent]}>
+      <View style={commonStyles.centerContent}>
         <Text style={commonStyles.text}>Loading...</Text>
       </View>
     );

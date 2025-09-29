@@ -36,8 +36,15 @@ export const commonStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    width: '100%',
-    height: '100%',
+  },
+  containerCentered: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContentContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
