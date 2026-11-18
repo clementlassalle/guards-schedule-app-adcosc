@@ -1,0 +1,122 @@
+{
+  "id": "02-incident-report",
+  "title": "Writing an incident report",
+  "language": "en",
+  "approved": false,
+  "scenes": [
+    {
+      "id": "s0",
+      "template": "title",
+      "duration": 2.6,
+      "props": { "kicker": "Guard training", "title": "Writing an incident report" }
+    },
+    {
+      "id": "s1",
+      "template": "document",
+      "narration": "Your report will be read by people who weren't there: your supervisor, the client, sometimes police or an insurer. If it's vague, it's useless to them, and it doesn't protect you.",
+      "props": {
+        "heading": "Incident report",
+        "lines": [{ "text": "Guy was acting weird near the back. Told him to leave." }],
+        "readersLabel": "Who reads it",
+        "readers": [
+          { "text": "Supervisor", "cue": "your supervisor" },
+          { "text": "Client", "cue": "the client" },
+          { "text": "Police", "cue": "police" },
+          { "text": "Insurer", "cue": "an insurer" }
+        ],
+        "stamp": { "text": "Too vague", "tone": "bad", "cue": "If it's vague" }
+      }
+    },
+    {
+      "id": "s2",
+      "template": "checklist",
+      "narration": "Every report answers six things. Who was involved. What happened. When. Where exactly. How you came to know about it. And what you did.",
+      "props": {
+        "heading": "Every report answers",
+        "items": [
+          { "text": "Who", "sub": "was involved", "cue": "Who was involved" },
+          { "text": "What", "sub": "happened", "cue": "What happened" },
+          { "text": "When", "sub": "date and time", "cue": "When." },
+          { "text": "Where", "sub": "exactly", "cue": "Where exactly" },
+          { "text": "How", "sub": "you came to know", "cue": "How you came" },
+          { "text": "What you did", "sub": "your actions", "cue": "And what you did" }
+        ]
+      }
+    },
+    {
+      "id": "s3",
+      "template": "compare",
+      "narration": "Write what you saw and heard, not what you concluded. Don't write \"he was drunk.\" Write what you observed: slurred speech, smell of alcohol, unsteady on his feet. Let the reader draw the conclusion.",
+      "props": {
+        "heading": "Facts, not conclusions",
+        "bad": {
+          "label": "Your conclusion",
+          "cue": "Don't write",
+          "lines": [{ "text": "“He was drunk.”", "cue": "he was drunk" }]
+        },
+        "good": {
+          "label": "What you observed",
+          "cue": "Write what you observed",
+          "lines": [
+            { "text": "Slurred speech", "cue": "slurred speech" },
+            { "text": "Smell of alcohol", "cue": "smell of alcohol" },
+            { "text": "Unsteady on his feet", "cue": "unsteady on his feet" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "s4",
+      "template": "timeline",
+      "narration": "Put it in order, with times. Use people's exact words when they matter, in quotation marks. Describe people so a stranger could pick them out: height, build, clothing, anything distinctive.",
+      "props": {
+        "heading": "In order, with times",
+        "events": [
+          { "time": "22:14", "text": "Man seen at the rear door", "at": 0.02 },
+          { "time": "22:16", "text": "Asked him to leave. He said: “I'll be back.”", "cue": "exact words" },
+          { "time": "22:19", "text": "He left by the north gate", "at": 0.42 },
+          { "time": "22:21", "text": "Supervisor informed", "at": 0.5 }
+        ],
+        "chipsLabel": "Describe people",
+        "chips": [
+          { "text": "Height", "cue": "height" },
+          { "text": "Build", "cue": "build," },
+          { "text": "Clothing", "cue": "clothing" },
+          { "text": "Anything distinctive", "cue": "anything distinctive" }
+        ]
+      }
+    },
+    {
+      "id": "s5",
+      "template": "statement",
+      "narration": "Write it as soon as the situation is safe, while it's fresh. Details fade within hours, and a late report is a weaker report.",
+      "confirm": ["Deadline for the report (for example, before end of shift) and where it is filed"],
+      "props": {
+        "icon": "clock",
+        "big": "Write it while it's fresh",
+        "sub": { "text": "As soon as the situation is safe", "at": 0.05 }
+      }
+    },
+    {
+      "id": "s6",
+      "template": "document",
+      "narration": "If you make a mistake, correct it openly. Never change a report to make it look better. A report that is plain and honest is the one that holds up.",
+      "props": {
+        "heading": "Incident report",
+        "lines": [
+          { "time": "22:14", "text": "Man, about 40, tall, grey hoodie, at the rear door.", "at": 0.0 },
+          { "time": "22:16", "text": "I asked him to leave. He said: “I'll be back.”", "at": 0.1 },
+          { "time": "22:19", "text": "He left by the north gate.", "at": 0.2 },
+          { "time": "22:21", "text": "I informed the supervisor.", "at": 0.3 }
+        ],
+        "stamp": { "text": "Clear", "tone": "good", "cue": "plain and honest" }
+      }
+    },
+    {
+      "id": "s7",
+      "template": "end",
+      "duration": 3.6,
+      "props": { "words": ["Facts.", "In order.", "With times."], "footer": "ERO Security · Guard training" }
+    }
+  ]
+}
